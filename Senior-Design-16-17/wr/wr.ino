@@ -23,14 +23,17 @@
 #define LEFT_MOTOR    9
 #define RIGHT_MOTOR   10
 #define SERVO_MOTOR   8
-#define IRLED         7
+#define IRLED         5
+#define TACKLE_PIN    6           // Tackle sensor is wired to pin 6
+int tackled = 1;                    // Tackle detects if the robot has been tackled (1 = not tackled)
+bool hasIndicatedTackle = false;    // variable to check if robot is previously in tackled state
 
 
 #define LEFT_FLIP -1
 #define RIGHT_FLIP 1
 #define DEADZONE 8
-#define SERVO_UP_POS 120
-#define SERVO_DN_POS 30
+#define SERVO_UP_POS 25
+#define SERVO_DN_POS 110
 #define SERVO_UP true
 #define SERVO_DN false
 bool servoState = SERVO_DN;
@@ -74,17 +77,19 @@ void setup() {
   //Assign motor pin outs
   leftMotor.attach(LEFT_MOTOR,      1000, 2000);
   rightMotor.attach(RIGHT_MOTOR,    1000, 2000);
-  servoMotor.attach(SERVO_MOTOR,    1000, 2000);
+  servoMotor.attach(SERVO_MOTOR,    560, 25200);
 
   stop();
 
-  pinMode(REDLED,   OUTPUT);
-  pinMode(BLUELED,  OUTPUT);
-  pinMode(GREENLED, OUTPUT);
-  pinMode(IRLED,    OUTPUT);
-
+  pinMode(REDLED,     OUTPUT);
+  pinMode(BLUELED,    OUTPUT);
+  pinMode(GREENLED,   OUTPUT);
+  pinMode(IRLED,      OUTPUT);
+ 
   flashLEDs();
 
+  pinMode(TACKLE_PIN, INPUT);
+  
   setServo(SERVO_DN);
 
   Serial.begin(115200);
@@ -124,7 +129,23 @@ void loop() {
       setBlue();
       stop();
     }
-
+    
+    tackled = !digitalRead(TACKLE_PIN);
+ 
+    if (tackled)
+    {
+      setRed();
+      if (!hasIndicatedTackle)                    //Detects if the controller had vibrated when tackled
+      {
+        PS3.setRumbleOn(10, 255, 10, 255);
+        hasIndicatedTackle = true;
+      }
+    }
+    else
+    {
+      setGreen();
+      if (hasIndicatedTackle)hasIndicatedTackle = false;
+    }
     if(PS3.getButtonPress(SELECT))
     {
       if(PS3.getButtonClick(START))
@@ -236,7 +257,7 @@ void stop()
 {
   leftMotor.writeMicroseconds(1500);
   rightMotor.writeMicroseconds(1500);
-  servoMotor.writeMicroseconds(1500);
+  servoMotor.write(SERVO_DN_POS);
 }
 
 void flashLEDs()
@@ -294,7 +315,7 @@ void toggleServo()
 {
   if (SERVO_UP == servoState)
   {
-    digitalWrite(IRLED, LOW);
+    digitalWrite(IRLED, HIGH);
     servoMotor.write(SERVO_DN_POS);
     servoState = SERVO_DN;
   }
@@ -302,7 +323,7 @@ void toggleServo()
   {
     servoMotor.write(SERVO_UP_POS);
     servoState = SERVO_UP;
-    digitalWrite(IRLED, HIGH);
+    digitalWrite(IRLED, LOW);
   }
 }
 
