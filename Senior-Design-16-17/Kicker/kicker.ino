@@ -29,7 +29,7 @@
 #define LOCKOUT_PIN   7
 #define SERVO_MOTOR   5
 
-
+//variable declarations
 #define LEFT_FLIP -1
 #define RIGHT_FLIP 1
 #define DEADZONE 8
@@ -41,6 +41,7 @@ int bowDirection = FORWARD;
 #define LED_STATUS_BACKWARD 9
 #define LED_STATUS_KIDMODE  15
 
+//Motor Handicaps and Kids Mode Declarations
 #define TURBO         1
 #define HANDICAP      2           //The amount the motor speed is divided by
 #define KID_HANDICAP  3
@@ -58,9 +59,9 @@ bool servoLocked = false;
 
 bool lockout;                     // 1 if in lockout mode, 0 if ready for kick
 unsigned long timeOfLastLockout = 0;
-#define TRIANGLE_KICK_VALUE  180
-#define CIRCLE_KICK_VALUE    150
-#define CROSS_KICK_VALUE     130
+#define TRIANGLE_KICK_VALUE  180 //Full power
+#define CIRCLE_KICK_VALUE    150 //Half power
+#define CROSS_KICK_VALUE     130 //
 #define SQUARE_KICK_VALUE    110
 #define RELOAD_VALUE         75
 #define LOCKOUT_DELAY_TIME   2000 //millis
@@ -70,7 +71,7 @@ int Drive = 0;                    //Initial speed before turning calculations
 int Turn = 0;                     //Turn is adjustment to drive for each motor separately to create turns
 
 int motorCorrect = 0;             //This will help center the stop value of the motors
-
+//LED Color Definitions
 #define RED   1
 #define GREEN 2
 #define BLUE  3
@@ -110,7 +111,7 @@ void setup() {
 
 void loop() {
   Usb.Task(); //updates buffer of PS3 inputs
-
+  //code to connect the PS3 controller
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) //This only lets the program run if the PS3 controller is connected.
   {
     if (newconnect == 0)
@@ -119,11 +120,13 @@ void loop() {
 #ifdef DEBUG
       Serial.println("Connection is good!");
 #endif
+      //Rumble when controller is Connected
       PS3.moveSetRumble(64);
       PS3.setRumbleOn(50, 255, 50, 255); //VIBRATE!!!
       PS3.setLedRaw(1);
       setGreen();
     }
+    //Disconnecting the Controller
     if (PS3.getButtonClick(PS))
     {
 #ifdef DEBUG
@@ -137,6 +140,8 @@ void loop() {
       stop();
     }
 
+    //Kids Mode-puts robot into slow mode
+    //Kids will be able to control with out injuring anyone
     if (PS3.getButtonPress(SELECT))
     {
       if (PS3.getButtonClick(START))
@@ -164,7 +169,7 @@ void loop() {
         }
       }
     }
-
+    //Turbo
     if (PS3.getButtonPress(R2) && !kidMode)
     {
 #ifdef DEBUG
